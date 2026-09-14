@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const crypto = require('crypto');
+const https = require('https');
 const db = require('./db');
 const path = require('path');
 
@@ -12,6 +14,75 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 app.use(express.static('public'));
+
+const WALLET = (() => {
+  try {
+    const w = require('./secrets/wallet.json');
+    return (w.address || w.eth || '').toLowerCase();
+  } catch (e) {
+    return '0x1b8ba746097cb889c1ce4adfc8202354b8750ef1';
+  }
+})();
+const PRICE_USD = 49;
+
+function getJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'user-agent': 'invoiceflow' } }, (res) => {
+      let data = '';
+      res.on('data', (c) => (data += c));
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
+    }).on('error', reject);
+  });
+}
+
+async function ethPriceUsd() {
+  try {
+    const d = await getJson('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    return d.ethereum.usd;
+  } catch (e) {
+    return 3000;
+  }
+}
+
+function genLicense(emailOrOrder) {
+  const seed = crypto.createHash('sha256').update('invoiceflow-license-' + emailOrOrder + '::$49').digest('hex').toUpperCase();
+  return 'IVF-' + seed.slice(0, 4) + '-' + seed.slice(4, 8) + '-' + seed.slice(8, 12) + '-' + seed.slice(12, 16);
+}
+
+async function checkEthPayment(order) {
+  const minEth = (order.expected_eth || 0) * 0.98;
+  try {
+    const url = `https://eth.blockscout.com/api/v2/addresses/${WALLET}/transactions?items_count=50`;
+    const d = await getJson(url);
+    for (const tx of d.items || []) {
+      if (!tx.to || !tx.to.hash) continue;
+      if (tx.to.hash.toLowerCase() !== WALLET) continue;
+      const valueWei = tx.value ? tx.value.toString() : '0';
+      const valueEth = parseInt(valueWei) / 1e18;
+      if (valueEth >= minEth && valueEth > 0) {
+        return { ok: true, txHash: tx.hash, valueEth };
+      }
+    }
+  } catch (e) { /* try tokens anyway */ }
+
+  try {
+    const url = `https://eth.blockscout.com/api/v2/addresses/${WALLET}/token-transfers?items_count=50`;
+    const d = await getJson(url);
+    for (const tx of d.items || []) {
+      if (!tx.to || !tx.to.hash) continue;
+      if (tx.to.hash.toLowerCase() !== WALLET) continue;
+      if (!tx.token || !tx.total) continue;
+      const symbol = (tx.token.symbol || '').toUpperCase();
+      if (symbol !== 'USDT' && symbol !== 'USDC') continue;
+      const amt = parseFloat(tx.total.value) / Math.pow(10, tx.total.decimals || 6);
+      if (amt >= minEth) {
+        return { ok: true, txHash: (tx.transaction_hash || tx.hash), valueEth: amt, token: symbol };
+      }
+    }
+  } catch (e) { /* no detection */ }
+
+  return { ok: false };
+}
 
 let demoUser = db.prepare('SELECT * FROM users WHERE email = ?').get('demo@invoiceflow.app');
 if (!demoUser) {
@@ -163,6 +234,57 @@ app.delete('/api/items/:id', (req, res) => {
 app.delete('/api/invoices/:id', (req, res) => {
   db.prepare('DELETE FROM invoices WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
+});
+
+app.get('/api/pricing', async (req, res) => {
+  const priceUsd = await ethPriceUsd();
+  res.json({ amount_usd: PRICE_USD, eth: +(PRICE_USD / priceUsd).toFixed(5), wallet: WALLET, price_usd: priceUsd });
+});
+
+app.post('/api/orders', async (req, res) => {
+  const { email } = req.body;
+  const id = crypto.randomBytes(6).toString('hex');
+  const priceUsd = await ethPriceUsd();
+  const expectedEth = +(PRICE_USD / priceUsd).toFixed(5);
+  db.prepare('INSERT INTO orders (id, email, amount_usd, expected_eth, status) VALUES (?,?,?,?,?)')
+    .run(id, email || '', PRICE_USD, expectedEth, 'pending');
+  res.json({ order_id: id, amount_usd: PRICE_USD, eth: expectedEth, wallet: WALLET, price_usd: priceUsd });
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.status === 'pending') {
+    const r = await checkEthPayment(order);
+    if (r.ok) {
+      const key = genLicense(order.id + order.email);
+      db.prepare('UPDATE orders SET status = ?, tx_hash = ?, license_key = ?, paid_at = datetime("now") WHERE id = ?')
+        .run('paid', r.txHash, key, order.id);
+      order.status = 'paid';
+      order.license_key = key;
+      order.tx_hash = r.txHash;
+    }
+  }
+  res.json(order);
+});
+
+app.post('/api/orders/:id/confirm', async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  const r = await checkEthPayment(order);
+  if (!r.ok) return res.json({ status: order.status, detected: false });
+  const key = genLicense(order.id + order.email);
+  db.prepare('UPDATE orders SET status = ?, tx_hash = ?, license_key = ?, paid_at = datetime("now") WHERE id = ?')
+    .run('paid', r.txHash, key, order.id);
+  res.json({ status: 'paid', detected: true, license_key: key, tx_hash: r.txHash });
+});
+
+app.get('/api/orders/:id/download', (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'paid') return res.status(403).json({ error: 'Not paid' });
+  const tarball = path.join(__dirname, 'invoiceflow-source.tar.gz');
+  if (!require('fs').existsSync(tarball)) return res.status(404).json({ error: 'Source not prepared yet' });
+  res.download(tarball, 'invoiceflow-source.tar.gz');
 });
 
 const STATS_STEPS_HOURS = process.env.PORT || 3000;

@@ -54,6 +54,19 @@ db.exec(`
     amount REAL DEFAULT 0,
     FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS orders (
+    id TEXT PRIMARY KEY,
+    email TEXT,
+    amount_usd REAL DEFAULT 49,
+    chain TEXT DEFAULT 'eth',
+    expected_eth REAL,
+    tx_hash TEXT,
+    status TEXT DEFAULT 'pending',
+    license_key TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    paid_at TEXT
+  );
 `);
 
 module.exports = db;
