@@ -1,0 +1,4 @@
+node_modules/
+invoiceflow.db
+server.log
+*.log
