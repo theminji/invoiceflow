@@ -12,6 +12,9 @@ A complete, self-hosted invoicing SaaS you can run in one command. Built with No
 - **CSV export** — pull everything into Excel/Sheets
 - **Polished dark-mode UI** — a clean landing page + working app in one
 
+> 🚀 **Live demo:** https://meaningful-antivirus-shadow-space.trycloudflare.com
+> **Landing page:** https://theminji.github.io/invoiceflow/
+
 ## Quick start
 
 ```bash
