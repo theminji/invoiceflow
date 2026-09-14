@@ -4,3 +4,6 @@ server.log
 *.log
 secrets/
 invoiceflow-source.tar.gz
+dashboard.png
+landing.png
+run.sh

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvoiceFlow — Self-hosted Invoicing SaaS</title>
+<meta name="description" content="InvoiceFlow is a self-hosted invoicing SaaS. One command to run, crypto checkout, live demo. $49 one-time, full source included.">
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#161a22; --panel2:#1d2330; --text:#e8ecf3; --muted:#9aa6b8;
+    --accent:#5eead4; --accent2:#38bdf8; --good:#34d399; --border:#263041;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; line-height:1.6}
+  a{color:var(--accent); text-decoration:none}
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px}
+  nav{padding:20px 0; display:flex; justify-content:space-between; align-items:center}
+  .logo{font-weight:800; font-size:1.2rem; letter-spacing:.3px}
+  .logo span{color:var(--accent)}
+  nav .badge{color:var(--muted); font-size:.85rem}
+  header{padding:80px 0 56px; text-align:center}
+  h1{font-size:3rem; line-height:1.1; font-weight:800; letter-spacing:-.5px; margin-bottom:16px}
+  h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .sub{color:var(--muted); font-size:1.2rem; max-width:640px; margin:0 auto 28px}
+  .cta{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .btn{display:inline-block; padding:14px 30px; border-radius:10px; font-weight:700; font-size:1rem}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#05211d}
+  .btn-ghost{border:1px solid var(--border); color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent)}
+  section{padding:48px 0}
+  h2{font-size:1.8rem; margin-bottom:24px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:24px}
+  .card h3{color:var(--accent); margin-bottom:8px; font-size:1.1rem}
+  .card p{color:var(--muted); font-size:.95rem}
+  .price-wrap{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:36px; text-align:center; max-width:420px; margin:0 auto}
+  .price{font-size:3rem; font-weight:800; color:var(--text)}
+  .price small{font-size:1rem; color:var(--muted); font-weight:400}
+  .price-note{color:var(--muted); font-size:.9rem; margin:8px 0 20px}
+  .crypto{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px}
+  .coin{background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:.8rem; color:var(--muted)}
+  .feat-list{list-style:none; margin:16px 0 4px; text-align:left}
+  .feat-list li{padding:6px 0; color:var(--muted); font-size:.92rem}
+  .feat-list li::before{content:"✓ "; color:var(--good); font-weight:700}
+  .terminal{background:#0a0c10; border:1px solid var(--border); border-radius:12px; padding:20px 24px; font-family:'Cascadia Mono',Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  .terminal .p{color:var(--accent)} .terminal .d{color:var(--muted)}
+  footer{padding:32px 0 60px; text-align:center; color:var(--muted); font-size:.85rem}
+  mark{background:rgba(94,234,212,.15); color:var(--accent); padding:1px 6px; border-radius:4px}
+</style>
+</head>
+<body>
+<nav class="wrap">
+  <div class="logo">Invoice<span>Flow</span></div>
+  <div class="badge">Self-hosted · MIT · Node.js + SQLite</div>
+</nav>
+
+<header class="wrap">
+  <h1>Invoicing SaaS.<br>Yours, on your <span>server</span>.</h1>
+  <p class="sub">A complete invoicing platform — clients, line items, tax, overdue tracking, CSV export. One command to run. No build step, no Docker, no subscription.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="#buy">Get the source — $49</a>
+    <a class="btn btn-ghost" href="https://meaningful-antivirus-shadow-space.trycloudflare.com" target="_blank">Live demo</a>
+  </div>
+</header>
+
+<section class="wrap">
+  <h2>What you get</h2>
+  <div class="grid">
+    <div class="card"><h3>Dashboard</h3><p>Live stats on totals, paid, pending, and overdue invoices at a glance.</p></div>
+    <div class="card"><h3>Full invoicing</h3><p>Clients, line items, quantity, unit price, tax, discount — totals always recomputed server-side.</p></div>
+    <div class="card"><h3>Overdue tracking</h3><p>Due dates auto-flag past-due invoices so nothing slips through.</p></div>
+    <div class="card"><h3>CSV export</h3><p>Pull any dataset into Excel or Sheets in one click.</p></div>
+    <div class="card"><h3>Polished dark UI</h3><p>A clean landing page plus a full working app in a single HTML file.</p></div>
+    <div class="card"><h3>No dependencies</h3><p>Node.js + Express + SQLite + vanilla JS. Installs in seconds, runs anywhere.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Run it in one command</h2>
+  <div class="terminal">
+    <div><span class="p">$</span> npm install <span class="d"># one-time</span></div>
+    <div><span class="p">$</span> node server.js</div>
+    <div><span class="d">→ InvoiceFlow running at http://localhost:3000</span></div>
+    <div><span class="d"></span></div>
+    <div><span class="d">A demo workspace (users, clients, invoices) is seeded automatically.</span></div>
+  </div>
+</section>
+
+<section class="wrap" id="buy">
+  <h2 style="text-align:center">Get InvoiceFlow</h2>
+  <div class="price-wrap">
+    <div class="price">$49 <small>once</small></div>
+    <p class="price-note">Full source code · forever license · MIT — rebrand it as your own</p>
+    <div class="crypto">
+      <span class="coin">ETH</span><span class="coin">USDT</span><span class="coin">USDC</span>
+    </div>
+    <ul class="feat-list">
+      <li>Complete Node.js + Express + SQLite source</li>
+      <li>Polished dark-mode UI (landing + app)</li>
+      <li>CSV export, clients, invoices, line items, tax</li>
+      <li>Automatic crypto payment verification</li>
+      <li>Download your source tarball instantly</li>
+    </ul>
+    <div class="cta" style="margin-top:18px">
+      <a class="btn btn-primary" href="#buy" onclick="openBuy()">Buy with crypto</a>
+    </div>
+    <p style="margin-top:14px;color:var(--muted);font-size:.8rem">Payment verified on-chain. License key + download delivered immediately.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <mark>MIT</mark> you can use it, sell it, even fork it. Built for indie hackers.
+</footer>
+
+<script>
+async function openBuy(){
+  const email = prompt('Email for license delivery:');
+  if(!email || !email.includes('@')) return alert('Please enter a valid email.');
+  try{
+    const order = await (await fetch('https://meaningful-antivirus-shadow-space.trycloudflare.com/api/orders', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email})
+    })).json();
+    if(!order.order_id){ alert('Failed to create order. Try again.'); return; }
+    prompt(`Send exactly ${order.eth} ETH to:\n${order.wallet}\n\nOrder ID: ${order.order_id}`, order.wallet);
+    alert('Payment address copied. After you pay, the license key unlocks automatically within ~30 seconds.\n\nSave your order ID and revisit the live demo to download.');
+  }catch(e){ alert('Network error: ' + e.message); }
+}
+</script>
+</body>
+</html>
